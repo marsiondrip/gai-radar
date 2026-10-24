@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>ГАИ РАДАР</title>
+<!-- by mrsndrp -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Russo+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+<div id="map"></div>
+
+<!-- эффекты ЭЛТ -->
+<div class="fx sweep"></div>
+<div class="fx scan"></div>
+<div class="fx vignette"></div>
+
+<header>
+  <div id="logo"><span class="dot"></span>ГАИ<b>РАДАР</b></div>
+  <div class="stat"><span id="count">0</span> ТОЧЕК<br><small id="geo">ГЕО: …</small></div>
+</header>
+
+<div id="cross" hidden><i></i><span>ТОЧКА ЗДЕСЬ</span></div>
+
+<button id="locate" aria-label="Я здесь">◎</button>
+<button id="add">+ ОТМЕТИТЬ</button>
+
+<!-- нижняя панель -->
+<section id="sheet" hidden>
+  <!-- режим: новая точка -->
+  <div id="mode-add" hidden>
+    <h2>НОВАЯ ТОЧКА</h2>
+    <p class="hint">Двигай карту — метка в центре. Или жми ◎ чтобы встать на себя.</p>
+    <div class="seg">
+      <button data-t="post" class="on">ПОСТ</button>
+      <button data-t="patrol">ПАТРУЛЬ</button>
+    </div>
+    <textarea id="comment" maxlength="200" rows="2" placeholder="комментарий (по желанию): где именно, в какую сторону…"></textarea>
+    <div class="photo-row">
+      <label class="btn ghost">ФОТО<input type="file" id="photo" accept="image/*" hidden></label>
+      <span id="photo-name">без фото</span>
+    </div>
+    <div class="row">
+      <button class="btn ghost" id="cancel">ОТМЕНА</button>
+      <button class="btn main" id="send">ПОСТАВИТЬ</button>
+    </div>
+  </div>
+
+  <!-- режим: карточка точки -->
+  <div id="mode-view" hidden>
+    <div class="card-top">
+      <h2 id="v-title">ПОСТ</h2>
+      <button class="x" id="close">✕</button>
+    </div>
+    <div id="v-age" class="age"></div>
+    <img id="v-photo" alt="" hidden>
+    <p id="v-comment" class="comment"></p>
+    <div class="votes"><span id="v-stands">0</span> подтв. · <span id="v-gone">0</span> уехали</div>
+    <div class="row">
+      <button class="btn ok" id="v-yes">СТОИТ ✓</button>
+      <button class="btn bad" id="v-no">УЕХАЛИ ✗</button>
+    </div>
+    <button class="btn ghost small" id="v-del" hidden>УДАЛИТЬ МОЮ ТОЧКУ</button>
+  </div>
+</section>
+
+<div id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
