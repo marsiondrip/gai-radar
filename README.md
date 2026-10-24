@@ -32,4 +32,4 @@
 
 ## Файлы
 - `server.js` — API, проверка подписи Telegram, голосования, автоудаление, бот
-- `public/index.html`, `style.css`, `app.js` — интерфейс (Leaflet + OpenStreetMap)
+- `index.html`, `style.css`, `app.js` — интерфейс (Leaflet + OpenStreetMap), лежат рядом с `server.js`

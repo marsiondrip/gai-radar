@@ -85,6 +85,7 @@ function view(p, uid) {
     gone: vals.filter(v => v.v === 'gone').length,
     myVote: p.votes[uid]?.v || null,
     mine: p.authorId === uid,
+    canDelete: p.authorId === uid || ADMIN_IDS.includes(uid),
   };
 }
 
@@ -165,7 +166,11 @@ app.delete('/api/posts/:id', auth, (req, res) => {
 });
 
 app.use('/uploads', express.static(path.join(DATA_DIR, 'uploads'), { maxAge: '1h' }));
-app.use(express.static(path.join(__dirname, 'public')));
+// страницы лежат рядом с server.js; отдаём только эти три файла (data/ и server.js наружу не торчат)
+const sendPage = f => (_req, res) => res.sendFile(path.join(__dirname, f));
+app.get(['/', '/index.html'], sendPage('index.html'));
+app.get('/style.css', sendPage('style.css'));
+app.get('/app.js', sendPage('app.js'));
 
 app.use((err, _req, res, _next) => {
   const msg = err.code === 'LIMIT_FILE_SIZE' ? 'Фото слишком большое' : 'Ошибка сервера';

@@ -1,0 +1,123 @@
+:root{
+  --bg:#04100a; --g:#39ff88; --g2:#1c8a4c; --r:#ff3b4a; --a:#ffb02e; --txt:#c9ffe0;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);
+  font-family:'Share Tech Mono',ui-monospace,monospace;overflow:hidden;touch-action:manipulation}
+#map{position:absolute;inset:0;background:var(--bg)}
+
+/* карта в «фосфорном» зелёном */
+.tiles{filter:grayscale(1) invert(1) contrast(.85) brightness(.75) sepia(1) hue-rotate(75deg) saturate(3.2)}
+.leaflet-container{background:var(--bg);font-family:inherit}
+.leaflet-control-attribution{background:rgba(4,16,10,.7)!important;color:#2a7a4c!important;font-size:9px}
+.leaflet-control-attribution a{color:#2a7a4c!important}
+.hid{opacity:.22}
+
+/* эффекты */
+.fx{position:absolute;inset:0;pointer-events:none;z-index:500}
+.scan{background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px);mix-blend-mode:multiply}
+.vignette{background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.65) 100%)}
+.sweep{opacity:.5;background:conic-gradient(from 0deg at 50% 50%,rgba(57,255,136,.22),rgba(57,255,136,0) 22%,transparent 100%);
+  animation:spin 6s linear infinite;mask:radial-gradient(circle at center,#000 0,#000 70%,transparent 71%)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* шапка */
+header{position:absolute;z-index:600;left:0;right:0;top:0;padding:calc(10px + var(--safe-t)) 14px 10px;
+  display:flex;justify-content:space-between;align-items:flex-start;
+  background:linear-gradient(#04100aee,#04100a00);pointer-events:none}
+#logo{font-family:'Russo One',sans-serif;font-size:22px;letter-spacing:1px;color:var(--g);
+  text-shadow:0 0 10px rgba(57,255,136,.8);pointer-events:auto;user-select:none}
+#logo b{color:#fff;margin-left:6px;text-shadow:0 0 10px rgba(255,255,255,.5)}
+#logo .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--r);
+  margin-right:8px;box-shadow:0 0 8px var(--r);animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.15}}
+.stat{text-align:right;font-size:13px;color:var(--g);text-shadow:0 0 6px rgba(57,255,136,.6)}
+.stat small{color:var(--g2);font-size:11px}
+
+/* кнопки на карте */
+#add{position:absolute;z-index:700;left:50%;transform:translateX(-50%);bottom:calc(22px + var(--safe-b));
+  font:inherit;font-size:17px;letter-spacing:2px;color:#02130a;background:var(--g);border:0;border-radius:4px;
+  padding:15px 28px;box-shadow:0 0 22px rgba(57,255,136,.55),0 0 0 2px #02130a,0 0 0 3px var(--g);
+  clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
+#add:active{transform:translateX(-50%) scale(.96)}
+#locate{position:absolute;z-index:700;right:14px;top:calc(76px + var(--safe-t));width:46px;height:46px;border-radius:50%;
+  font-size:24px;color:var(--g);background:#04100acc;border:1px solid var(--g);box-shadow:0 0 12px rgba(57,255,136,.35)}
+body.busy #add{display:none}
+
+/* прицел */
+#cross{position:absolute;z-index:650;left:50%;top:50%;width:0;height:0;pointer-events:none}
+#cross i{position:absolute;left:-26px;top:-26px;width:52px;height:52px;border:2px solid var(--a);border-radius:50%;
+  box-shadow:0 0 14px var(--a),inset 0 0 14px rgba(255,176,46,.4);animation:pulse 1.4s infinite}
+#cross i::before,#cross i::after{content:"";position:absolute;background:var(--a)}
+#cross i::before{left:50%;top:-12px;bottom:-12px;width:2px;margin-left:-1px}
+#cross i::after{top:50%;left:-12px;right:-12px;height:2px;margin-top:-1px}
+#cross span{position:absolute;left:-60px;width:120px;top:34px;text-align:center;font-size:12px;color:var(--a)}
+@keyframes pulse{50%{transform:scale(1.15);opacity:.7}}
+
+/* нижняя панель */
+#sheet{position:absolute;z-index:800;left:0;right:0;bottom:0;padding:16px 16px calc(16px + var(--safe-b));
+  background:linear-gradient(#06180f,#03100a);border-top:2px solid var(--g);
+  box-shadow:0 -10px 40px rgba(57,255,136,.25);animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(100%)}}
+#sheet h2{margin:0 0 6px;font-family:'Russo One',sans-serif;font-size:18px;letter-spacing:1px;color:var(--g)}
+.hint{margin:0 0 12px;font-size:12px;color:var(--g2)}
+.seg{display:flex;gap:8px;margin-bottom:10px}
+.seg button{flex:1;font:inherit;font-size:15px;padding:12px;color:var(--g);background:transparent;
+  border:1px solid var(--g2);border-radius:4px;letter-spacing:1px}
+.seg button.on{color:#02130a;background:var(--g);border-color:var(--g);box-shadow:0 0 14px rgba(57,255,136,.5)}
+.seg button[data-t=patrol].on{background:var(--a);border-color:var(--a);box-shadow:0 0 14px rgba(255,176,46,.5)}
+textarea{width:100%;font:inherit;font-size:14px;color:var(--txt);background:#020b06;border:1px solid var(--g2);
+  border-radius:4px;padding:10px;resize:none;outline:none}
+textarea:focus{border-color:var(--g)}
+.photo-row{display:flex;align-items:center;gap:12px;margin:10px 0;font-size:12px;color:var(--g2)}
+.row{display:flex;gap:8px;margin-top:8px}
+.btn{flex:1;font:inherit;font-size:15px;letter-spacing:1px;padding:14px 10px;border-radius:4px;border:1px solid var(--g);
+  color:var(--g);background:transparent;text-align:center;cursor:pointer}
+.btn.main{color:#02130a;background:var(--g);box-shadow:0 0 16px rgba(57,255,136,.5)}
+.btn.ghost{border-color:var(--g2);color:var(--g2)}
+.btn.ok{color:#02130a;background:var(--g);box-shadow:0 0 14px rgba(57,255,136,.45)}
+.btn.bad{color:#fff;background:var(--r);border-color:var(--r);box-shadow:0 0 14px rgba(255,59,74,.45)}
+.btn.small{width:100%;margin-top:10px;padding:9px;font-size:12px}
+.btn:disabled{opacity:.4}
+.btn.voted{outline:2px solid #fff;outline-offset:2px}
+.card-top{display:flex;justify-content:space-between;align-items:center}
+.x{font:inherit;font-size:20px;color:var(--g2);background:none;border:0;padding:4px 8px}
+.age{font-size:13px;color:var(--a);margin-bottom:8px}
+#v-photo{width:100%;max-height:200px;object-fit:cover;border:1px solid var(--g2);border-radius:4px;margin-bottom:8px}
+.comment{margin:0 0 8px;font-size:14px;color:var(--txt);word-break:break-word}
+.comment:empty{display:none}
+.votes{font-size:12px;color:var(--g2);margin-bottom:4px}
+
+/* метки */
+.pin{position:relative;width:56px;height:56px}
+.pin .core{position:absolute;left:21px;top:21px;width:14px;height:14px;border-radius:50%;background:var(--r);
+  box-shadow:0 0 12px var(--r),0 0 0 2px #04100a}
+.pin .ring{position:absolute;left:0;top:0;width:56px;height:56px;border-radius:50%;border:2px solid var(--r);
+  animation:ping 2s ease-out infinite;opacity:0}
+.pin .ring.r2{animation-delay:1s}
+.pin.patrol .core{background:var(--a);box-shadow:0 0 12px var(--a),0 0 0 2px #04100a}
+.pin.patrol .ring{border-color:var(--a)}
+.pin.stale{opacity:.45}
+.pin em{position:absolute;left:50%;top:44px;transform:translateX(-50%);font-style:normal;font-size:10px;letter-spacing:1px;
+  color:#fff;background:#04100aD0;padding:1px 4px;border:1px solid var(--r);white-space:nowrap}
+.pin.patrol em{border-color:var(--a)}
+@keyframes ping{0%{transform:scale(.25);opacity:.9}100%{transform:scale(1);opacity:0}}
+
+.me{width:18px;height:18px;border-radius:50%;background:#4aa8ff;border:2px solid #fff;box-shadow:0 0 0 6px rgba(74,168,255,.3),0 0 14px #4aa8ff}
+
+/* soon… */
+.soon{width:120px;margin-left:-60px;text-align:center;font-family:'Russo One',sans-serif;color:#2a9a5c;
+  letter-spacing:2px;line-height:1.1;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.soon b{display:block;font-size:13px;font-weight:400}
+.soon i{display:block;font-style:normal;font-size:11px;color:var(--a);animation:blink 1.6s infinite}
+.soon.live b{color:var(--g);text-shadow:0 0 10px var(--g)}
+.soon.live i{color:var(--g);animation:none}
+body.far .soon{opacity:1}
+
+#toast{position:absolute;z-index:900;left:50%;top:calc(70px + var(--safe-t));transform:translate(-50%,-20px);
+  max-width:86%;padding:10px 16px;font-size:13px;color:#02130a;background:var(--g);border-radius:4px;
+  opacity:0;pointer-events:none;transition:.25s;text-align:center;box-shadow:0 0 18px rgba(57,255,136,.6)}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast.err{background:var(--r);color:#fff}
