@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>ГАИ РАДАР</title>
 <!-- by mrsndrp -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Russo+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 </head>
 <body>
 <div id="map"></div>
@@ -22,32 +22,68 @@
 
 <header>
   <div id="logo"><span class="dot"></span>ГАИ<b>РАДАР</b></div>
-  <div class="stat"><span id="count">0</span> ТОЧЕК<br><small id="geo">ГЕО: …</small></div>
+  <div class="stat"><span id="count">0 ТОЧЕК</span><br><small id="geo">ГЕО: …</small></div>
 </header>
 
+<!-- навигатор: скорость и ближайший пост/патруль -->
+<div id="hud" hidden>
+  <span class="pill" id="spd">0 КМ/Ч</span>
+  <span class="pill warn" id="near" hidden></span>
+</div>
+
+<!-- прицел: стоит строго в центре видимой карты (над нижней панелью) -->
 <div id="cross" hidden><i></i><span>ТОЧКА ЗДЕСЬ</span></div>
 
-<button id="locate" aria-label="Я здесь">◎</button>
+<button class="rbtn" id="compass" aria-label="Север наверх">
+  <svg id="needle" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+    <path d="M12 2.5l4.4 9.5H7.6z" fill="#ff3b4a"/>
+    <path d="M12 21.5L7.6 12h8.8z" fill="currentColor" opacity=".6"/>
+  </svg>
+</button>
+<button class="rbtn" id="locate" aria-label="Я здесь">
+  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="6.5"/>
+    <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/>
+    <path d="M12 1.8v4M12 18.2v4M1.8 12h4M18.2 12h4"/>
+  </svg>
+</button>
+
+<button class="rbtn" id="chatbtn" aria-label="Чат">
+  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">
+    <path d="M4 5.5h16v11H10.5L6 20.5v-4H4z"/>
+    <path d="M8 10h8M8 13h5" stroke-linecap="round"/>
+  </svg>
+  <span id="badge" hidden>0</span>
+</button>
 <button id="add">+ ОТМЕТИТЬ</button>
 
 <!-- нижняя панель -->
 <section id="sheet" hidden>
   <!-- режим: новая точка -->
   <div id="mode-add" hidden>
-    <h2>НОВАЯ ТОЧКА</h2>
-    <p class="hint">Двигай карту — метка в центре. Или жми ◎ чтобы встать на себя.</p>
-    <div class="seg">
-      <button data-t="post" class="on">ПОСТ</button>
-      <button data-t="patrol">ПАТРУЛЬ</button>
+    <h2 id="add-title">НОВАЯ ТОЧКА</h2>
+    <p class="hint">Двигай карту — метка в прицеле. Кнопка справа — встать на себя.</p>
+    <div class="seg three" id="seg">
+      <button type="button" data-t="post" class="on">ПОСТ</button>
+      <button type="button" data-t="patrol">ПАТРУЛЬ</button>
+      <button type="button" data-t="fuel">АЗС</button>
     </div>
+
+    <div id="fuel-form" hidden>
+      <div class="lbl">БЕНЗИН АИ <small>тап: есть → нет → не знаю</small></div>
+      <div class="chips" id="fuel-chips"></div>
+      <div class="lbl">ОЧЕРЕДЬ</div>
+      <div class="qrow" id="queue-row"></div>
+    </div>
+
     <textarea id="comment" maxlength="200" rows="2" placeholder="комментарий (по желанию): где именно, в какую сторону…"></textarea>
     <div class="photo-row">
       <label class="btn ghost">ФОТО<input type="file" id="photo" accept="image/*" hidden></label>
       <span id="photo-name">без фото</span>
     </div>
     <div class="row">
-      <button class="btn ghost" id="cancel">ОТМЕНА</button>
-      <button class="btn main" id="send">ПОСТАВИТЬ</button>
+      <button type="button" class="btn ghost" id="cancel">ОТМЕНА</button>
+      <button type="button" class="btn main" id="send">ПОСТАВИТЬ</button>
     </div>
   </div>
 
@@ -55,18 +91,43 @@
   <div id="mode-view" hidden>
     <div class="card-top">
       <h2 id="v-title">ПОСТ</h2>
-      <button class="x" id="close">✕</button>
+      <button type="button" class="x" id="close" aria-label="Закрыть">✕</button>
     </div>
     <div id="v-age" class="age"></div>
+    <div id="v-fuel" hidden>
+      <div class="vchips" id="v-chips"></div>
+      <div class="qline"><span id="v-qlabel"></span><div class="qbar" id="v-qbar"><i></i><i></i><i></i></div></div>
+    </div>
     <img id="v-photo" alt="" hidden>
     <p id="v-comment" class="comment"></p>
-    <div class="votes"><span id="v-stands">0</span> подтв. · <span id="v-gone">0</span> уехали</div>
+    <div class="votes"><span id="v-stands">0</span> подтв. · <span id="v-gone">0</span> <span id="v-gone-l">уехали</span></div>
     <div class="row">
-      <button class="btn ok" id="v-yes">СТОИТ ✓</button>
-      <button class="btn bad" id="v-no">УЕХАЛИ ✗</button>
+      <button type="button" class="btn ok" id="v-yes">СТОИТ ✓</button>
+      <button type="button" class="btn bad" id="v-no">УЕХАЛИ ✗</button>
     </div>
-    <button class="btn ghost small" id="v-del" hidden>УДАЛИТЬ ТОЧКУ</button>
+    <button type="button" class="btn ghost small" id="v-upd" hidden>ОБНОВИТЬ ДАННЫЕ ПО АЗС</button>
+    <button type="button" class="btn ghost small" id="v-del" hidden>УДАЛИТЬ ТОЧКУ</button>
   </div>
+</section>
+
+<!-- анонимный чат -->
+<section id="chat" hidden>
+  <div class="chat-top">
+    <button type="button" id="chat-close" class="x" aria-label="Назад">‹ КАРТА</button>
+    <div class="chat-title">ЧАТ<small>АНОНИМНО</small></div>
+    <div class="chat-me" id="chat-me"></div>
+  </div>
+  <div id="adbar">
+    <div class="idle">● ЭФИР ОТКРЫТ · ВСЕ АНОНИМНЫ</div>
+    <div class="ad" id="ad"><i class="adtag">РЕКЛАМА</i><span id="ad-text"></span></div>
+  </div>
+  <div id="msgs"></div>
+  <form id="chat-form" autocomplete="off">
+    <input id="chat-input" maxlength="300" placeholder="сообщение…" enterkeyhint="send">
+    <button type="submit" id="chat-send" aria-label="Отправить">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M3 11.5L21 3l-7 18-3.2-7.3z"/></svg>
+    </button>
+  </form>
 </section>
 
 <div id="toast"></div>
